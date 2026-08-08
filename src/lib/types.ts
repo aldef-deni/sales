@@ -90,15 +90,35 @@ export interface DealRow {
   title: string
   customer: string | null
   owner: string | null
+  owner_id: number | null
   value: number
   stage: string
   stage_label: string
   probability: number
   weighted_value: number
   expected_close_date: string | null
+  lost_reason: string | null
   days_in_stage: number
   normal_days_in_stage: number
   is_stalled: boolean
+  is_overdue: boolean
+}
+
+export interface BoardColumn {
+  stage: string
+  label: string
+  is_closed: boolean
+  probability: number
+  deal_count: number
+  total_value: number
+  weighted_value: number
+  deals: DealRow[]
+}
+
+export interface Board {
+  columns: BoardColumn[]
+  closed_window_days: number
+  can_move_others: boolean
 }
 
 export interface LeadRow {

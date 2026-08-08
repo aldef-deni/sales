@@ -1,52 +1,97 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { PipelineBoard } from '../components/pipeline/PipelineBoard'
 import { api } from '../lib/api'
+import { useAuth } from '../lib/auth'
 import { money, num } from '../lib/format'
-import type { DealRow } from '../lib/types'
+import type { Board, DealRow } from '../lib/types'
 
 interface DealResponse {
   data: DealRow[]
   summary: { count: number; total_value: number; weighted_value: number }
 }
 
-const FILTERS = [
+const LIST_FILTERS = [
   { key: 'open', label: 'Semua terbuka' },
   { key: 'stalled', label: 'Mengendap' },
   { key: 'overdue', label: 'Lewat tanggal' },
 ]
 
 export function PipelinePage() {
+  const { user } = useAuth()
   const [params, setParams] = useSearchParams()
-  const filter = params.get('filter') ?? 'open'
-  const [result, setResult] = useState<DealResponse | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    setResult(null)
-    api<DealResponse>(`/deals?filter=${filter}`)
-      .then(setResult)
-      .catch((err) => setError(err.message))
-  }, [filter])
+  // Filter "mengendap"/"lewat tanggal" hanya masuk akal pada tampilan daftar,
+  // jadi tautan insight yang membawa filter langsung membuka daftar.
+  const filter = params.get('filter') ?? ''
+  const view = params.get('view') ?? (filter ? 'list' : 'board')
 
   return (
     <>
       <header className="page-head">
         <div>
           <h1 className="page-title">Pipeline</h1>
-          <p className="page-sub">
-            {result
-              ? `${num(result.summary.count)} deal · ${money(result.summary.total_value)} nilai kotor · ${money(result.summary.weighted_value)} tertimbang`
-              : 'Memuat…'}
-          </p>
+        </div>
+        <div className="view-switch">
+          <button
+            className={`chip${view === 'board' ? ' active' : ''}`}
+            onClick={() => setParams({})}
+          >
+            Papan
+          </button>
+          <button
+            className={`chip${view === 'list' ? ' active' : ''}`}
+            onClick={() => setParams({ view: 'list' })}
+          >
+            Daftar
+          </button>
         </div>
       </header>
 
+      {view === 'board'
+        ? <BoardView currentUserId={user?.id ?? 0} />
+        : <ListView filter={filter || 'open'} onFilter={(f) => setParams(f === 'open' ? { view: 'list' } : { view: 'list', filter: f })} />}
+    </>
+  )
+}
+
+function BoardView({ currentUserId }: { currentUserId: number }) {
+  const [board, setBoard] = useState<Board | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    api<Board>('/deals/board').then(setBoard).catch((err) => setError(err.message))
+  }, [])
+
+  if (error) return <div className="card"><div className="empty">{error}</div></div>
+  if (!board) return <div className="card"><div className="empty">Memuat papan…</div></div>
+
+  return <PipelineBoard board={board} currentUserId={currentUserId} onBoardChange={setBoard} />
+}
+
+function ListView({ filter, onFilter }: { filter: string; onFilter: (f: string) => void }) {
+  const [result, setResult] = useState<DealResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setResult(null)
+    api<DealResponse>(`/deals?filter=${filter}`).then(setResult).catch((err) => setError(err.message))
+  }, [filter])
+
+  return (
+    <>
+      <p className="page-sub" style={{ marginTop: -8, marginBottom: 14 }}>
+        {result
+          ? `${num(result.summary.count)} deal · ${money(result.summary.total_value)} nilai kotor · ${money(result.summary.weighted_value)} tertimbang`
+          : 'Memuat…'}
+      </p>
+
       <div className="toolbar">
-        {FILTERS.map((item) => (
+        {LIST_FILTERS.map((item) => (
           <button
             key={item.key}
             className={`chip${filter === item.key ? ' active' : ''}`}
-            onClick={() => setParams(item.key === 'open' ? {} : { filter: item.key })}
+            onClick={() => onFilter(item.key)}
           >
             {item.label}
           </button>
@@ -86,8 +131,6 @@ export function PipelinePage() {
                     <td className="num">{money(deal.value)}</td>
                     <td className="num">{deal.probability}%</td>
                     <td className="num">
-                      {/* Angka "diam" tanpa pembanding tidak berarti apa-apa —
-                          normalnya berapa hari ikut ditampilkan. */}
                       {deal.days_in_stage} hr
                       <span style={{ color: 'var(--ink-muted)' }}> / {deal.normal_days_in_stage}</span>
                     </td>
