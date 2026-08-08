@@ -5,7 +5,8 @@ import { initials } from '../lib/format'
 const NAV = [
   { to: '/', label: 'Dashboard', icon: '◲', end: true },
   { to: '/pipeline', label: 'Pipeline', icon: '◐' },
-  { to: '/leads', label: 'Prospek', icon: '◍' },
+  { to: '/leads', label: 'Prospek', icon: '◍', end: true },
+  { to: '/leads/analytics', label: 'Analisa Prospek', icon: '◔' },
 ]
 
 export function AppLayout() {

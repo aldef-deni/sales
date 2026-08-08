@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { AppLayout } from './components/AppLayout'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DashboardPage } from './pages/DashboardPage'
+import { LeadAnalyticsPage } from './pages/LeadAnalyticsPage'
 import { LeadsPage } from './pages/LeadsPage'
 import { LoginPage } from './pages/LoginPage'
 import { PipelinePage } from './pages/PipelinePage'
@@ -17,6 +18,7 @@ export default function App() {
               <Route index element={<DashboardPage />} />
               <Route path="pipeline" element={<PipelinePage />} />
               <Route path="leads" element={<LeadsPage />} />
+              <Route path="leads/analytics" element={<LeadAnalyticsPage />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

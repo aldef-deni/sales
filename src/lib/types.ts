@@ -121,6 +121,14 @@ export interface Board {
   can_move_others: boolean
 }
 
+export type LeadPriority = 'hot' | 'warm' | 'cold'
+
+export interface ScoreReason {
+  factor: string
+  impact: number
+  detail?: string | null
+}
+
 export interface LeadRow {
   id: number
   name: string
@@ -131,11 +139,123 @@ export interface LeadRow {
   source: string
   source_label: string
   status: string
+  status_label: string
   score: number
-  score_reasons: { factor: string; impact: number }[]
+  priority: LeadPriority
+  priority_label: string
   estimated_value: number
   assignee: string | null
+  assigned_to: number | null
   age_days: number
   last_contacted_at: string | null
+  next_follow_up_at: string | null
+  follow_up_due: boolean
+  follow_up_count: number
   is_untouched: boolean
+  response_hours: number | null
+  lost_reason: string | null
+  lost_reason_category: string | null
+  converted_customer_id: number | null
+}
+
+export interface LeadDetail extends LeadRow {
+  notes: string | null
+  score_reasons: ScoreReason[]
+  scored_at: string | null
+  has_budget: boolean | null
+  is_decision_maker: boolean | null
+  need_level: string | null
+  timeline: string | null
+  payload: Record<string, unknown> | null
+  created_at: string
+}
+
+export interface LeadSummary {
+  open: number
+  hot: number
+  follow_up_due: number
+  untouched: number
+  open_value: number
+  duplicates_merged: number
+  duplicates_flagged: number
+  avg_response_hours: number | null
+}
+
+export interface ChannelOption {
+  value: string
+  label: string
+  automatic: boolean
+  total: number
+}
+
+export interface LeadListResponse {
+  data: LeadRow[]
+  summary: LeadSummary
+  channels: ChannelOption[]
+  statuses: { value: string; label: string }[]
+}
+
+export interface TimelineEntry {
+  type: string
+  at: string
+  title: string
+  note: string | null
+  by: string | null
+}
+
+export interface LeadDetailResponse {
+  lead: LeadDetail
+  timeline: TimelineEntry[]
+  possible_duplicates: { id: number; name: string; company: string | null; phone: string | null; email: string | null; status: string }[]
+  merged_duplicates: { id: number; name: string; company: string | null; source: string; created_at: string }[]
+  loss_categories: { value: string; label: string }[]
+}
+
+export interface ChannelPerformance {
+  channel: string
+  label: string
+  total: number
+  share_pct: number
+  qualified: number
+  converted: number
+  failed: number
+  conversion_rate: number
+  converted_value: number
+  value_per_lead: number
+  avg_score: number
+  avg_response_hours: number | null
+  is_significant: boolean
+}
+
+export interface FunnelStep {
+  status: string
+  label: string
+  currently_here: number
+  reached: number
+  reach_pct: number
+  avg_hours_here: number | null
+}
+
+export interface LeadAnalytics {
+  summary: LeadSummary
+  channels: ChannelPerformance[]
+  funnel: FunnelStep[]
+  loss_categories: { category: string; label: string; total: number; share_pct: number; lost_value: number }[]
+  loss_by_channel: { label: string; top_reason: string | null; top_reason_count: number; total: number }[]
+  response_speed: { label: string; total: number; converted: number; conversion_rate: number; is_significant: boolean }[]
+  intake_trend: { date: string; label: string; created: number; merged: number; rejected: number }[]
+}
+
+export interface Forecast {
+  period: string
+  days_left: number
+  target: number
+  booked: number
+  range: { low: number; likely: number; high: number }
+  attainment_likely_pct: number | null
+  gap_to_target: number
+  will_hit_target: boolean
+  components: Record<string, { label: string; amount: number; basis: string }>
+  narrative: string
+  stage_win_rates: Record<string, { reached: number; won: number; rate: number; is_measured: boolean }>
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ForecastCard } from '../components/ForecastCard'
 import { InsightCard } from '../components/InsightCard'
 import { LeadSourceScatter } from '../components/charts/LeadSourceScatter'
 import { PipelineFunnel } from '../components/charts/PipelineFunnel'
@@ -88,6 +89,10 @@ export function DashboardPage() {
           ))}
         </div>
       </section>
+
+      <div style={{ marginBottom: 14 }}>
+        <ForecastCard />
+      </div>
 
       <div className="grid grid-2" style={{ marginBottom: 14 }}>
         <section className="card">
